@@ -1,0 +1,261 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Reusable Primitives
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedSignedIn() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidBloodGroup(bg) {
+      return bg is string && bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+    }
+
+    function isValidSex(sex) {
+      return sex is string && sex in ['male', 'female', 'other'];
+    }
+
+    function isValidUrgency(urgency) {
+      return urgency is string && urgency in ['critical', 'urgent', 'scheduled'];
+    }
+
+    // 3. Entity Validation Blueprints
+    function isValidUserProfile(data) {
+      return data.keys().hasAll([
+          'uid', 'name', 'age', 'sex', 'bloodGroup', 'phone', 'whatsappEnabled',
+          'email', 'emailEnabled', 'country', 'state', 'city', 'pinCode', 'landmark',
+          'weightKg', 'hemoglobinGdl', 'neverDonated', 'lastDonationDate',
+          'feelsHealthy', 'freeOfInfection', 'normalTemp', 'stablePulse',
+          'isEligible', 'isAvailable', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'name', 'age', 'sex', 'bloodGroup', 'phone', 'whatsappEnabled',
+          'email', 'emailEnabled', 'country', 'state', 'city', 'pinCode', 'landmark',
+          'weightKg', 'hemoglobinGdl', 'neverDonated', 'lastDonationDate',
+          'feelsHealthy', 'freeOfInfection', 'normalTemp', 'stablePulse',
+          'isEligible', 'isAvailable', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 100
+        && data.age is int && data.age >= 13 && data.age <= 120
+        && isValidSex(data.sex)
+        && isValidBloodGroup(data.bloodGroup)
+        && data.phone is string && data.phone.size() >= 7 && data.phone.size() <= 24
+        && data.whatsappEnabled is bool
+        && data.email is string && data.email.size() <= 120
+        && data.emailEnabled is bool
+        && data.country is string && data.country.size() >= 2 && data.country.size() <= 80
+        && data.state is string && data.state.size() >= 2 && data.state.size() <= 80
+        && data.city is string && data.city.size() >= 2 && data.city.size() <= 80
+        && data.pinCode is string && data.pinCode.size() >= 3 && data.pinCode.size() <= 16
+        && data.landmark is string && data.landmark.size() >= 2 && data.landmark.size() <= 140
+        && (data.weightKg is int || data.weightKg is float) && data.weightKg >= 20 && data.weightKg <= 300
+        && (data.hemoglobinGdl is int || data.hemoglobinGdl is float) && data.hemoglobinGdl >= 3 && data.hemoglobinGdl <= 25
+        && data.neverDonated is bool
+        && data.lastDonationDate is string && data.lastDonationDate.size() <= 32
+        && data.feelsHealthy is bool
+        && data.freeOfInfection is bool
+        && data.normalTemp is bool
+        && data.stablePulse is bool
+        && data.isEligible is bool
+        && data.isAvailable is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidDonorListing(data) {
+      return data.keys().hasAll([
+          'ownerId', 'name', 'bloodGroup', 'phone', 'whatsappEnabled',
+          'email', 'emailEnabled', 'country', 'state', 'city', 'pinCode', 'landmark',
+          'isEligible', 'isAvailable', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'name', 'bloodGroup', 'phone', 'whatsappEnabled',
+          'email', 'emailEnabled', 'country', 'state', 'city', 'pinCode', 'landmark',
+          'isEligible', 'isAvailable', 'updatedAt'
+        ])
+        && isValidId(data.ownerId)
+        && data.ownerId == request.auth.uid
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 100
+        && isValidBloodGroup(data.bloodGroup)
+        && data.phone is string && data.phone.size() >= 7 && data.phone.size() <= 24
+        && data.whatsappEnabled is bool
+        && data.email is string && data.email.size() <= 120
+        && data.emailEnabled is bool
+        && data.country is string && data.country.size() >= 2 && data.country.size() <= 80
+        && data.state is string && data.state.size() >= 2 && data.state.size() <= 80
+        && data.city is string && data.city.size() >= 2 && data.city.size() <= 80
+        && data.pinCode is string && data.pinCode.size() >= 3 && data.pinCode.size() <= 16
+        && data.landmark is string && data.landmark.size() >= 2 && data.landmark.size() <= 140
+        && data.isEligible is bool
+        && data.isAvailable is bool
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidBloodRequest(data) {
+      return data.keys().hasAll([
+          'requesterId', 'patientBloodGroup', 'allowCompatible', 'unitsNeeded',
+          'urgency', 'hospitalName', 'hospitalLandmark', 'city', 'pinCode',
+          'state', 'country', 'contactPhone', 'ambulancePhone', 'notes', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'requesterId', 'patientBloodGroup', 'allowCompatible', 'unitsNeeded',
+          'urgency', 'hospitalName', 'hospitalLandmark', 'city', 'pinCode',
+          'state', 'country', 'contactPhone', 'ambulancePhone', 'notes', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.requesterId)
+        && data.requesterId == request.auth.uid
+        && isValidBloodGroup(data.patientBloodGroup)
+        && data.allowCompatible is bool
+        && data.unitsNeeded is int && data.unitsNeeded >= 1 && data.unitsNeeded <= 20
+        && isValidUrgency(data.urgency)
+        && data.hospitalName is string && data.hospitalName.size() >= 2 && data.hospitalName.size() <= 140
+        && data.hospitalLandmark is string && data.hospitalLandmark.size() >= 2 && data.hospitalLandmark.size() <= 140
+        && data.city is string && data.city.size() >= 2 && data.city.size() <= 80
+        && data.pinCode is string && data.pinCode.size() >= 3 && data.pinCode.size() <= 16
+        && data.state is string && data.state.size() >= 2 && data.state.size() <= 80
+        && data.country is string && data.country.size() >= 2 && data.country.size() <= 80
+        && data.contactPhone is string && data.contactPhone.size() >= 7 && data.contactPhone.size() <= 24
+        && data.ambulancePhone is string && data.ambulancePhone.size() <= 24
+        && data.notes is string && data.notes.size() <= 300
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // 4. Collection Rules
+    match /users/{userId} {
+      allow get: if isValidId(userId)
+        && isVerifiedSignedIn()
+        && request.auth.uid == userId;
+
+      allow list: if false;
+
+      allow create: if isValidId(userId)
+        && isVerifiedSignedIn()
+        && userId == request.auth.uid
+        && isValidUserProfile(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isValidId(userId)
+        && isVerifiedSignedIn()
+        && userId == request.auth.uid
+        && isValidUserProfile(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'name', 'age', 'sex', 'bloodGroup', 'phone', 'whatsappEnabled',
+            'email', 'emailEnabled', 'country', 'state', 'city', 'pinCode', 'landmark',
+            'weightKg', 'hemoglobinGdl', 'neverDonated', 'lastDonationDate',
+            'feelsHealthy', 'freeOfInfection', 'normalTemp', 'stablePulse',
+            'isEligible', 'isAvailable', 'updatedAt'
+          ])
+          || incoming().diff(existing()).affectedKeys().hasOnly(['isAvailable', 'updatedAt'])
+          || incoming().diff(existing()).affectedKeys().hasOnly([
+            'neverDonated', 'lastDonationDate', 'isEligible', 'updatedAt'
+          ])
+        );
+
+      allow delete: if isValidId(userId)
+        && isVerifiedSignedIn()
+        && request.auth.uid == userId;
+    }
+
+    match /donors/{donorId} {
+      allow get: if isValidId(donorId)
+        && isVerifiedSignedIn()
+        && (
+          existing().ownerId == request.auth.uid
+          || (existing().isEligible == true && existing().isAvailable == true)
+        );
+
+      allow list: if isVerifiedSignedIn()
+        && resource.data.isEligible == true
+        && resource.data.isAvailable == true;
+
+      allow create: if isValidId(donorId)
+        && isVerifiedSignedIn()
+        && donorId == request.auth.uid
+        && isValidDonorListing(incoming())
+        && incoming().updatedAt == request.time
+        && existsAfter(/databases/$(database)/documents/users/$(request.auth.uid));
+
+      allow update: if isValidId(donorId)
+        && isVerifiedSignedIn()
+        && isValidDonorListing(incoming())
+        && donorId == request.auth.uid
+        && existing().ownerId == request.auth.uid
+        && incoming().ownerId == existing().ownerId
+        && incoming().updatedAt == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'name', 'bloodGroup', 'phone', 'whatsappEnabled',
+            'email', 'emailEnabled', 'country', 'state', 'city', 'pinCode', 'landmark',
+            'isEligible', 'isAvailable', 'updatedAt'
+          ])
+          || incoming().diff(existing()).affectedKeys().hasOnly(['isAvailable', 'updatedAt'])
+          || incoming().diff(existing()).affectedKeys().hasOnly(['isEligible', 'updatedAt'])
+        );
+
+      allow delete: if isValidId(donorId)
+        && isVerifiedSignedIn()
+        && existing().ownerId == request.auth.uid;
+    }
+
+    match /requests/{requestId} {
+      allow get: if isValidId(requestId)
+        && isVerifiedSignedIn()
+        && existing().requesterId == request.auth.uid;
+
+      allow list: if isVerifiedSignedIn()
+        && resource.data.requesterId == request.auth.uid;
+
+      allow create: if isValidId(requestId)
+        && isVerifiedSignedIn()
+        && isValidBloodRequest(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isValidId(requestId)
+        && isVerifiedSignedIn()
+        && isValidBloodRequest(incoming())
+        && existing().requesterId == request.auth.uid
+        && incoming().requesterId == existing().requesterId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'patientBloodGroup', 'allowCompatible', 'unitsNeeded', 'urgency',
+          'hospitalName', 'hospitalLandmark', 'city', 'pinCode',
+          'state', 'country', 'contactPhone', 'ambulancePhone', 'notes', 'updatedAt'
+        ]);
+
+      allow delete: if isValidId(requestId)
+        && isVerifiedSignedIn()
+        && existing().requesterId == request.auth.uid;
+    }
+  }
+}

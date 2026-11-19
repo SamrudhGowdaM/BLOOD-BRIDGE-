@@ -1,0 +1,393 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private donor profile, location, clinical screening metrics, and day-of-donation eligibility checklist owned by a single authenticated user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Authenticated user ID."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100,
+          "description": "Donor full name."
+        },
+        "age": {
+          "type": "integer",
+          "description": "Donor age in years (must be 18 to 65 to be eligible)."
+        },
+        "sex": {
+          "type": "string",
+          "enum": ["male", "female", "other"],
+          "description": "Biological sex used to determine 3-month (male) vs 4-month (female) donation cooldown."
+        },
+        "bloodGroup": {
+          "type": "string",
+          "enum": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+          "description": "Donor ABO/Rh blood group."
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 7,
+          "maxLength": 24,
+          "description": "Contact phone number for emergency calls and WhatsApp."
+        },
+        "whatsappEnabled": {
+          "type": "boolean",
+          "description": "Whether the donor can be contacted via WhatsApp."
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Contact email address for urgent blood request notifications."
+        },
+        "emailEnabled": {
+          "type": "boolean",
+          "description": "Whether the donor opts in to receive urgent email alerts."
+        },
+        "country": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Donor country."
+        },
+        "state": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Donor state or province."
+        },
+        "city": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Donor city or town."
+        },
+        "pinCode": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 16,
+          "description": "Postal / PIN code."
+        },
+        "landmark": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 140,
+          "description": "Nearby neighborhood landmark or street."
+        },
+        "weightKg": {
+          "type": "number",
+          "description": "Body weight in kilograms (must be > 45 kg to donate)."
+        },
+        "hemoglobinGdl": {
+          "type": "number",
+          "description": "Hemoglobin level in g/dL (must be > 12.5 g/dL to donate)."
+        },
+        "neverDonated": {
+          "type": "boolean",
+          "description": "True if the user has never donated blood previously."
+        },
+        "lastDonationDate": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "ISO date YYYY-MM-DD of the most recent blood donation, or empty string if never donated."
+        },
+        "feelsHealthy": {
+          "type": "boolean",
+          "description": "Checklist: feels healthy and well today."
+        },
+        "freeOfInfection": {
+          "type": "boolean",
+          "description": "Checklist: free from cold, flu, or other infections on donation day."
+        },
+        "normalTemp": {
+          "type": "boolean",
+          "description": "Checklist: normal body temperature."
+        },
+        "stablePulse": {
+          "type": "boolean",
+          "description": "Checklist: stable pulse rate."
+        },
+        "isEligible": {
+          "type": "boolean",
+          "description": "Computed overall clinical eligibility boolean."
+        },
+        "isAvailable": {
+          "type": "boolean",
+          "description": "Whether the donor has opted in to appear in emergency searches."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-updated timestamp."
+        }
+      },
+      "required": [
+        "uid",
+        "name",
+        "age",
+        "sex",
+        "bloodGroup",
+        "phone",
+        "whatsappEnabled",
+        "email",
+        "emailEnabled",
+        "country",
+        "state",
+        "city",
+        "pinCode",
+        "landmark",
+        "weightKg",
+        "hemoglobinGdl",
+        "neverDonated",
+        "lastDonationDate",
+        "feelsHealthy",
+        "freeOfInfection",
+        "normalTemp",
+        "stablePulse",
+        "isEligible",
+        "isAvailable",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "DonorListing": {
+      "title": "DonorListing",
+      "description": "Searchable active donor directory entry synced from UserProfile without exposing private clinical metrics.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner user ID matching document ID."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100,
+          "description": "Donor display name."
+        },
+        "bloodGroup": {
+          "type": "string",
+          "enum": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+          "description": "Donor ABO/Rh blood group."
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 7,
+          "maxLength": 24,
+          "description": "Contact phone number."
+        },
+        "whatsappEnabled": {
+          "type": "boolean",
+          "description": "Whether WhatsApp link is enabled."
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Opted-in emergency contact email (empty if emailEnabled is false)."
+        },
+        "emailEnabled": {
+          "type": "boolean",
+          "description": "Whether email alerts are enabled."
+        },
+        "country": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Donor country."
+        },
+        "state": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Donor state."
+        },
+        "city": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Donor city."
+        },
+        "pinCode": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 16,
+          "description": "Donor postal / PIN code."
+        },
+        "landmark": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 140,
+          "description": "Donor nearby landmark."
+        },
+        "isEligible": {
+          "type": "boolean",
+          "description": "True only when all eligibility gates pass."
+        },
+        "isAvailable": {
+          "type": "boolean",
+          "description": "True when donor opts in to receive emergency requests."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last status update."
+        }
+      },
+      "required": [
+        "ownerId",
+        "name",
+        "bloodGroup",
+        "phone",
+        "whatsappEnabled",
+        "email",
+        "emailEnabled",
+        "country",
+        "state",
+        "city",
+        "pinCode",
+        "landmark",
+        "isEligible",
+        "isAvailable",
+        "updatedAt"
+      ]
+    },
+    "BloodRequest": {
+      "title": "BloodRequest",
+      "description": "Saved hospital blood search and emergency alert card created by a patient or coordinator.",
+      "type": "object",
+      "properties": {
+        "requesterId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Authenticated requester UID."
+        },
+        "patientBloodGroup": {
+          "type": "string",
+          "enum": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+          "description": "Required recipient blood group."
+        },
+        "allowCompatible": {
+          "type": "boolean",
+          "description": "Whether compatible donor blood groups are included."
+        },
+        "unitsNeeded": {
+          "type": "integer",
+          "description": "Number of blood units needed."
+        },
+        "urgency": {
+          "type": "string",
+          "enum": ["critical", "urgent", "scheduled"],
+          "description": "Triage urgency level."
+        },
+        "hospitalName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 140,
+          "description": "Nearest hospital name."
+        },
+        "hospitalLandmark": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 140,
+          "description": "Hospital street or landmark."
+        },
+        "city": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Hospital city."
+        },
+        "pinCode": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 16,
+          "description": "Hospital postal / PIN code."
+        },
+        "state": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Hospital state."
+        },
+        "country": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Hospital country."
+        },
+        "contactPhone": {
+          "type": "string",
+          "minLength": 7,
+          "maxLength": 24,
+          "description": "Emergency coordinator phone number."
+        },
+        "ambulancePhone": {
+          "type": "string",
+          "maxLength": 24,
+          "description": "Emergency ambulance dispatch number."
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Optional ward or blood bank counter instructions."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "requesterId",
+        "patientBloodGroup",
+        "allowCompatible",
+        "unitsNeeded",
+        "urgency",
+        "hospitalName",
+        "hospitalLandmark",
+        "city",
+        "pinCode",
+        "state",
+        "country",
+        "contactPhone",
+        "ambulancePhone",
+        "notes",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private clinical profile and eligibility state for an authenticated user."
+    },
+    "/donors/{donorId}": {
+      "schema": { "$ref": "#/entities/DonorListing" },
+      "description": "Active eligible donor directory entries queryable by signed-in patients."
+    },
+    "/requests/{requestId}": {
+      "schema": { "$ref": "#/entities/BloodRequest" },
+      "description": "Owner-scoped hospital blood requests and saved emergency alert cards."
+    }
+  }
+}
